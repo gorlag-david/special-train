@@ -156,7 +156,7 @@
         .tracks {
             position: absolute;
             bottom: 25%;
-            width: 100%;
+            width: 200%;
             height: 10px;
             background: repeating-linear-gradient(
                 90deg,
@@ -165,30 +165,41 @@
                 transparent 20px,
                 transparent 40px
             );
+            animation: scrollBackground 10s infinite linear;
         }
 
-        /* Train container */
+        @keyframes scrollBackground {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Train container - Fixed position (camera locked) */
         .train-container {
             position: absolute;
             bottom: 26%;
-            left: 0;
-            animation: moveTrain 10s infinite linear;
+            left: 20%;
             filter: none;
             transition: filter 0.3s ease;
+            z-index: 100;
         }
 
-        @keyframes moveTrain {
-            0% { transform: translateX(-300px); }
-            100% { transform: translateX(calc(100vw + 300px)); }
-        }
-
-        /* Speed variations */
-        .train-container.slow {
+        /* Speed variations - Applied to background animations */
+        body.speed-slow .tracks,
+        body.speed-slow .ground,
+        body.speed-slow .coin {
             animation-duration: 20s;
         }
 
-        .train-container.fast {
+        body.speed-fast .tracks,
+        body.speed-fast .ground,
+        body.speed-fast .coin {
             animation-duration: 5s;
+        }
+
+        body.speed-normal .tracks,
+        body.speed-normal .ground,
+        body.speed-normal .coin {
+            animation-duration: 10s;
         }
 
         /* Train structure */
@@ -311,18 +322,17 @@
             animation-duration: 0.25s;
         }
 
-        /* Controls */
+        /* Controls - Moved to top-left */
         .controls {
             position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
+            top: 20px;
+            left: 20px;
             background: rgba(255, 255, 255, 0.95);
             padding: 15px 20px;
             border-radius: 15px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
             z-index: 1000;
-            max-width: 90vw;
+            max-width: 350px;
             backdrop-filter: blur(10px);
         }
 
@@ -369,8 +379,8 @@
 
         .toggle-controls {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            bottom: 20px;
+            left: 20px;
             background: rgba(255, 255, 255, 0.95);
             border: none;
             border-radius: 50%;
@@ -381,6 +391,65 @@
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
             z-index: 1001;
             touch-action: manipulation;
+        }
+
+        /* Coins */
+        .coin {
+            position: absolute;
+            bottom: 35%;
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle at 30% 30%, #FFD700, #FFA500);
+            border-radius: 50%;
+            border: 3px solid #DAA520;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            animation: scrollBackground 10s infinite linear;
+            z-index: 50;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #DAA520;
+        }
+
+        .coin::before {
+            content: '$';
+            font-size: 18px;
+        }
+
+        .coin.collected {
+            animation: collectCoin 0.5s ease-out forwards;
+        }
+
+        @keyframes collectCoin {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px) scale(0.5);
+                opacity: 0;
+            }
+        }
+
+        /* Score display */
+        .score {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+
+        .score span {
+            color: #FFD700;
         }
 
         .controls.hidden {
@@ -434,7 +503,25 @@
 
             .controls {
                 padding: 12px 15px;
-                bottom: 10px;
+                top: 10px;
+                left: 10px;
+                max-width: 250px;
+            }
+
+            .score {
+                padding: 10px 15px;
+                font-size: 18px;
+                top: 10px;
+                right: 10px;
+            }
+
+            .coin {
+                width: 25px;
+                height: 25px;
+            }
+
+            .coin::before {
+                font-size: 14px;
             }
 
             .control-group label {
@@ -505,6 +592,9 @@
     <!-- Toggle button -->
     <button class="toggle-controls" id="toggleBtn">⚙️</button>
 
+    <!-- Score display -->
+    <div class="score">Coins: <span id="scoreValue">0</span></div>
+
     <!-- Controls -->
     <div class="controls" id="controls">
         <div class="control-group">
@@ -542,10 +632,16 @@
     </div>
 
     <script>
+        // Game state
+        let score = 0;
+        let coinSpawnTimer = null;
+
         // Initialize scene
         function init() {
             createStars();
             createClouds();
+            document.body.classList.add('speed-normal');
+            startCoinSpawning();
         }
 
         // Create stars for night mode
@@ -592,19 +688,15 @@
 
         // Speed control
         function setSpeed(speed) {
-            const train = document.getElementById('train');
-            train.classList.remove('slow', 'fast');
-
-            if (speed !== 'normal') {
-                train.classList.add(speed);
-            }
-
+            document.body.classList.remove('speed-slow', 'speed-normal', 'speed-fast');
+            document.body.classList.add('speed-' + speed);
             updateActiveButton(event.target, 'speed');
         }
 
         // Day/Night toggle
         function setTimeOfDay(time) {
-            document.body.className = time;
+            document.body.classList.remove('day', 'night');
+            document.body.classList.add(time);
             updateActiveButton(event.target, 'time');
         }
 
@@ -625,6 +717,70 @@
             const buttons = button.parentElement.querySelectorAll('button');
             buttons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
+        }
+
+        // Coin spawning - Spawn coins seldom (every 8-15 seconds)
+        function startCoinSpawning() {
+            function spawnCoin() {
+                const coin = document.createElement('div');
+                coin.className = 'coin';
+                coin.style.left = '100vw';
+
+                // Randomize vertical position slightly
+                const randomOffset = Math.random() * 10 - 5;
+                coin.style.bottom = (35 + randomOffset) + '%';
+
+                document.getElementById('scene').appendChild(coin);
+
+                // Check for collision periodically
+                const collisionInterval = setInterval(() => {
+                    if (checkCollision(coin)) {
+                        collectCoin(coin);
+                        clearInterval(collisionInterval);
+                    }
+
+                    // Remove coin if it goes off screen
+                    const coinRect = coin.getBoundingClientRect();
+                    if (coinRect.right < 0) {
+                        coin.remove();
+                        clearInterval(collisionInterval);
+                    }
+                }, 50);
+
+                // Schedule next coin spawn (8-15 seconds - seldom)
+                const nextSpawnDelay = Math.random() * 7000 + 8000;
+                coinSpawnTimer = setTimeout(spawnCoin, nextSpawnDelay);
+            }
+
+            // Start spawning coins
+            const initialDelay = Math.random() * 5000 + 3000;
+            coinSpawnTimer = setTimeout(spawnCoin, initialDelay);
+        }
+
+        // Check collision between train and coin
+        function checkCollision(coin) {
+            const train = document.getElementById('train');
+            const trainRect = train.getBoundingClientRect();
+            const coinRect = coin.getBoundingClientRect();
+
+            return !(coinRect.right < trainRect.left ||
+                     coinRect.left > trainRect.right ||
+                     coinRect.bottom < trainRect.top ||
+                     coinRect.top > trainRect.bottom);
+        }
+
+        // Collect coin
+        function collectCoin(coin) {
+            if (coin.classList.contains('collected')) return;
+
+            coin.classList.add('collected');
+            score++;
+            document.getElementById('scoreValue').textContent = score;
+
+            // Remove coin after animation
+            setTimeout(() => {
+                coin.remove();
+            }, 500);
         }
 
         // Toggle controls visibility
