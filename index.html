@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Mobile Train Animation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            overflow: hidden;
+            transition: background 0.5s ease;
+            touch-action: manipulation;
+        }
+
+        /* Day/Night backgrounds */
+        body.day {
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 50%, #90EE90 100%);
+        }
+
+        body.night {
+            background: linear-gradient(to bottom, #0c1445 0%, #1a237e 50%, #0d47a1 100%);
+        }
+
+        #scene {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Stars for night mode */
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        body.night .stars {
+            opacity: 1;
+        }
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle 2s infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        /* Sun and Moon */
+        .celestial {
+            position: absolute;
+            top: 10%;
+            right: 15%;
+            transition: all 0.5s ease;
+            z-index: 1;
+        }
+
+        .sun {
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #FFD700 0%, #FFA500 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+        }
+
+        .moon {
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #F0F0F0 0%, #C0C0C0 100%);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .moon::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            right: -5px;
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, #B0B0B0 0%, #909090 100%);
+            border-radius: 50%;
+        }
+
+        body.day .moon {
+            opacity: 0;
+            transform: translateY(-100px);
+        }
+
+        body.night .sun {
+            opacity: 0;
+            transform: translateY(-100px);
+        }
+
+        /* Clouds */
+        .clouds {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .cloud {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 100px;
+            animation: float 20s infinite linear;
+        }
+
+        body.night .cloud {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .cloud::before,
+        .cloud::after {
+            content: '';
+            position: absolute;
+            background: inherit;
+            border-radius: 100px;
+        }
+
+        @keyframes float {
+            from { transform: translateX(-200px); }
+            to { transform: translateX(calc(100vw + 200px)); }
+        }
+
+        /* Ground/Track */
+        .ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 30%;
+            background: linear-gradient(to bottom, #8B7355 0%, #654321 50%, #3d2817 100%);
+            transition: background 0.5s ease;
+        }
+
+        body.night .ground {
+            background: linear-gradient(to bottom, #2c2416 0%, #1a1410 50%, #0d0a08 100%);
+        }
+
+        .tracks {
+            position: absolute;
+            bottom: 25%;
+            width: 100%;
+            height: 10px;
+            background: repeating-linear-gradient(
+                90deg,
+                #4a4a4a 0px,
+                #4a4a4a 20px,
+                transparent 20px,
+                transparent 40px
+            );
+        }
+
+        /* Train container */
+        .train-container {
+            position: absolute;
+            bottom: 26%;
+            left: 0;
+            animation: moveTrain 10s infinite linear;
+            filter: none;
+            transition: filter 0.3s ease;
+        }
+
+        @keyframes moveTrain {
+            0% { transform: translateX(-300px); }
+            100% { transform: translateX(calc(100vw + 300px)); }
+        }
+
+        /* Speed variations */
+        .train-container.slow {
+            animation-duration: 20s;
+        }
+
+        .train-container.fast {
+            animation-duration: 5s;
+        }
+
+        /* Train structure */
+        .train {
+            display: flex;
+            align-items: flex-end;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+        }
+
+        /* Engine */
+        .engine {
+            position: relative;
+            width: 100px;
+            height: 80px;
+            background: linear-gradient(to bottom, #d32f2f 0%, #b71c1c 100%);
+            border-radius: 10px 10px 5px 5px;
+            margin-right: 5px;
+        }
+
+        .cabin {
+            position: absolute;
+            top: -30px;
+            left: 10px;
+            width: 50px;
+            height: 30px;
+            background: linear-gradient(to bottom, #1976D2 0%, #0D47A1 100%);
+            border-radius: 8px 8px 0 0;
+        }
+
+        .window {
+            position: absolute;
+            top: 5px;
+            left: 10px;
+            width: 30px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 3px;
+            border: 2px solid #333;
+        }
+
+        .chimney {
+            position: absolute;
+            top: -50px;
+            right: 15px;
+            width: 15px;
+            height: 20px;
+            background: #333;
+            border-radius: 3px 3px 0 0;
+        }
+
+        .smoke {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 20px;
+            background: rgba(200, 200, 200, 0.7);
+            border-radius: 50%;
+            animation: smoke 2s infinite;
+        }
+
+        @keyframes smoke {
+            0% {
+                transform: translateX(-50%) translateY(0) scale(0.5);
+                opacity: 0.7;
+            }
+            100% {
+                transform: translateX(-50%) translateY(-50px) scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        /* Cargo cars */
+        .cargo {
+            position: relative;
+            width: 90px;
+            height: 70px;
+            background: linear-gradient(to bottom, #FF9800 0%, #F57C00 100%);
+            border-radius: 5px;
+            margin-right: 5px;
+        }
+
+        .cargo:nth-child(3) {
+            background: linear-gradient(to bottom, #4CAF50 0%, #388E3C 100%);
+        }
+
+        .cargo:nth-child(4) {
+            background: linear-gradient(to bottom, #2196F3 0%, #1976D2 100%);
+        }
+
+        /* Wheels */
+        .wheels {
+            position: absolute;
+            bottom: -15px;
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            padding: 0 10px;
+        }
+
+        .wheel {
+            width: 25px;
+            height: 25px;
+            background: radial-gradient(circle, #333 40%, #666 41%, #666 60%, #333 61%);
+            border-radius: 50%;
+            animation: rotate 0.5s infinite linear;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .train-container.slow .wheel {
+            animation-duration: 1s;
+        }
+
+        .train-container.fast .wheel {
+            animation-duration: 0.25s;
+        }
+
+        /* Controls */
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            max-width: 90vw;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-group {
+            margin: 10px 0;
+        }
+
+        .control-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 16px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+            min-width: 70px;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        button.active {
+            background: #2196F3;
+            color: white;
+            border-color: #1976D2;
+        }
+
+        .toggle-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1001;
+            touch-action: manipulation;
+        }
+
+        .controls.hidden {
+            display: none;
+        }
+
+        /* Filter presets */
+        .filter-none { filter: none; }
+        .filter-sepia { filter: sepia(80%); }
+        .filter-grayscale { filter: grayscale(100%); }
+        .filter-blur { filter: blur(2px); }
+        .filter-brightness { filter: brightness(1.3); }
+        .filter-contrast { filter: contrast(1.5); }
+        .filter-saturate { filter: saturate(2); }
+        .filter-hue { filter: hue-rotate(90deg); }
+        .filter-invert { filter: invert(100%); }
+        .filter-vintage { filter: sepia(50%) contrast(1.2) brightness(0.9); }
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .engine {
+                width: 80px;
+                height: 65px;
+            }
+
+            .cargo {
+                width: 70px;
+                height: 55px;
+            }
+
+            .cabin {
+                width: 40px;
+                height: 25px;
+            }
+
+            .wheel {
+                width: 20px;
+                height: 20px;
+            }
+
+            .sun, .moon {
+                width: 40px;
+                height: 40px;
+            }
+
+            button {
+                padding: 8px 12px;
+                font-size: 12px;
+                min-width: 60px;
+            }
+
+            .controls {
+                padding: 12px 15px;
+                bottom: 10px;
+            }
+
+            .control-group label {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body class="day">
+    <div id="scene">
+        <!-- Stars for night mode -->
+        <div class="stars" id="stars"></div>
+
+        <!-- Sun and Moon -->
+        <div class="celestial">
+            <div class="sun"></div>
+            <div class="moon"></div>
+        </div>
+
+        <!-- Clouds -->
+        <div class="clouds" id="clouds"></div>
+
+        <!-- Ground and tracks -->
+        <div class="ground">
+            <div class="tracks"></div>
+        </div>
+
+        <!-- Train -->
+        <div class="train-container" id="train">
+            <div class="train">
+                <!-- Engine -->
+                <div class="engine">
+                    <div class="cabin">
+                        <div class="window"></div>
+                    </div>
+                    <div class="chimney">
+                        <div class="smoke"></div>
+                    </div>
+                    <div class="wheels">
+                        <div class="wheel"></div>
+                        <div class="wheel"></div>
+                    </div>
+                </div>
+
+                <!-- Cargo cars -->
+                <div class="cargo">
+                    <div class="wheels">
+                        <div class="wheel"></div>
+                        <div class="wheel"></div>
+                    </div>
+                </div>
+                <div class="cargo">
+                    <div class="wheels">
+                        <div class="wheel"></div>
+                        <div class="wheel"></div>
+                    </div>
+                </div>
+                <div class="cargo">
+                    <div class="wheels">
+                        <div class="wheel"></div>
+                        <div class="wheel"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toggle button -->
+    <button class="toggle-controls" id="toggleBtn">⚙️</button>
+
+    <!-- Controls -->
+    <div class="controls" id="controls">
+        <div class="control-group">
+            <label>Speed:</label>
+            <div class="button-group">
+                <button onclick="setSpeed('slow')">🐌 Slow</button>
+                <button onclick="setSpeed('normal')" class="active">🚂 Normal</button>
+                <button onclick="setSpeed('fast')">⚡ Fast</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>Time of Day:</label>
+            <div class="button-group">
+                <button onclick="setTimeOfDay('day')" class="active">☀️ Day</button>
+                <button onclick="setTimeOfDay('night')">🌙 Night</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <label>Filters:</label>
+            <div class="button-group">
+                <button onclick="setFilter('none')" class="active">None</button>
+                <button onclick="setFilter('sepia')">Sepia</button>
+                <button onclick="setFilter('grayscale')">B&W</button>
+                <button onclick="setFilter('blur')">Blur</button>
+                <button onclick="setFilter('brightness')">Bright</button>
+                <button onclick="setFilter('contrast')">Contrast</button>
+                <button onclick="setFilter('saturate')">Saturate</button>
+                <button onclick="setFilter('hue')">Hue</button>
+                <button onclick="setFilter('invert')">Invert</button>
+                <button onclick="setFilter('vintage')">Vintage</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize scene
+        function init() {
+            createStars();
+            createClouds();
+        }
+
+        // Create stars for night mode
+        function createStars() {
+            const starsContainer = document.getElementById('stars');
+            const numStars = 50;
+
+            for (let i = 0; i < numStars; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 70 + '%';
+                star.style.width = Math.random() * 3 + 1 + 'px';
+                star.style.height = star.style.width;
+                star.style.animationDelay = Math.random() * 2 + 's';
+                starsContainer.appendChild(star);
+            }
+        }
+
+        // Create clouds
+        function createClouds() {
+            const cloudsContainer = document.getElementById('clouds');
+            const numClouds = 5;
+
+            for (let i = 0; i < numClouds; i++) {
+                const cloud = document.createElement('div');
+                cloud.className = 'cloud';
+
+                const size = Math.random() * 40 + 60;
+                cloud.style.width = size + 'px';
+                cloud.style.height = size * 0.6 + 'px';
+                cloud.style.top = Math.random() * 40 + 10 + '%';
+                cloud.style.left = Math.random() * 100 + '%';
+                cloud.style.animationDuration = Math.random() * 10 + 15 + 's';
+                cloud.style.animationDelay = Math.random() * 10 + 's';
+
+                // Create cloud puffs
+                const before = Math.random() * 20 + 40;
+                cloud.style.setProperty('--before-size', before + 'px');
+
+                cloudsContainer.appendChild(cloud);
+            }
+        }
+
+        // Speed control
+        function setSpeed(speed) {
+            const train = document.getElementById('train');
+            train.classList.remove('slow', 'fast');
+
+            if (speed !== 'normal') {
+                train.classList.add(speed);
+            }
+
+            updateActiveButton(event.target, 'speed');
+        }
+
+        // Day/Night toggle
+        function setTimeOfDay(time) {
+            document.body.className = time;
+            updateActiveButton(event.target, 'time');
+        }
+
+        // Filter control
+        function setFilter(filterName) {
+            const train = document.getElementById('train');
+            train.className = train.className.split(' ').filter(c => !c.startsWith('filter-')).join(' ');
+
+            if (filterName !== 'none') {
+                train.classList.add('filter-' + filterName);
+            }
+
+            updateActiveButton(event.target, 'filter');
+        }
+
+        // Update active button state
+        function updateActiveButton(button, group) {
+            const buttons = button.parentElement.querySelectorAll('button');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+        }
+
+        // Toggle controls visibility
+        document.getElementById('toggleBtn').addEventListener('click', function() {
+            const controls = document.getElementById('controls');
+            controls.classList.toggle('hidden');
+        });
+
+        // Prevent body scroll on mobile
+        document.body.addEventListener('touchmove', function(e) {
+            if (!e.target.closest('.controls')) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>
