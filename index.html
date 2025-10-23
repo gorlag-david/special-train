@@ -173,7 +173,7 @@
             100% { transform: translateX(-50%); }
         }
 
-        /* Train container - Fixed position (camera locked) */
+        /* Train container - Fixed position (camera locked) with 3D perspective */
         .train-container {
             position: absolute;
             bottom: 26%;
@@ -181,6 +181,8 @@
             filter: none;
             transition: filter 0.3s ease;
             z-index: 100;
+            perspective: 1000px;
+            transform-style: preserve-3d;
         }
 
         /* Speed variations - Applied to background animations */
@@ -202,14 +204,16 @@
             animation-duration: 10s;
         }
 
-        /* Train structure */
+        /* Train structure with 3D transforms */
         .train {
             display: flex;
             align-items: flex-end;
             filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+            transform-style: preserve-3d;
+            transform: rotateY(-25deg) rotateX(5deg);
         }
 
-        /* Engine */
+        /* Engine with 3D depth */
         .engine {
             position: relative;
             width: 100px;
@@ -217,6 +221,35 @@
             background: linear-gradient(to bottom, #d32f2f 0%, #b71c1c 100%);
             border-radius: 10px 10px 5px 5px;
             margin-right: 5px;
+            transform-style: preserve-3d;
+        }
+
+        /* 3D side panel for engine */
+        .engine::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 40px;
+            height: 100%;
+            background: linear-gradient(to right, #b71c1c 0%, #8b0000 100%);
+            transform-origin: left;
+            transform: rotateY(90deg);
+            border-radius: 0 10px 5px 0;
+        }
+
+        /* 3D top panel for engine */
+        .engine::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 40px;
+            background: linear-gradient(to bottom, #f44336 0%, #d32f2f 100%);
+            transform-origin: bottom;
+            transform: rotateX(90deg);
+            border-radius: 10px 10px 0 0;
         }
 
         .cabin {
@@ -226,6 +259,35 @@
             width: 50px;
             height: 30px;
             background: linear-gradient(to bottom, #1976D2 0%, #0D47A1 100%);
+            border-radius: 8px 8px 0 0;
+            transform-style: preserve-3d;
+        }
+
+        /* 3D side panel for cabin */
+        .cabin::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 40px;
+            height: 100%;
+            background: linear-gradient(to right, #0D47A1 0%, #01579B 100%);
+            transform-origin: left;
+            transform: rotateY(90deg);
+            border-radius: 0 8px 0 0;
+        }
+
+        /* 3D top panel for cabin */
+        .cabin::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 40px;
+            background: linear-gradient(to bottom, #42A5F5 0%, #1976D2 100%);
+            transform-origin: bottom;
+            transform: rotateX(90deg);
             border-radius: 8px 8px 0 0;
         }
 
@@ -248,6 +310,21 @@
             height: 20px;
             background: #333;
             border-radius: 3px 3px 0 0;
+            transform-style: preserve-3d;
+        }
+
+        /* 3D side for chimney */
+        .chimney::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 15px;
+            height: 100%;
+            background: #1a1a1a;
+            transform-origin: left;
+            transform: rotateY(90deg);
+            border-radius: 0 3px 0 0;
         }
 
         .smoke {
@@ -273,7 +350,7 @@
             }
         }
 
-        /* Cargo cars */
+        /* Cargo cars with 3D depth */
         .cargo {
             position: relative;
             width: 90px;
@@ -281,14 +358,59 @@
             background: linear-gradient(to bottom, #FF9800 0%, #F57C00 100%);
             border-radius: 5px;
             margin-right: 5px;
+            transform-style: preserve-3d;
+        }
+
+        /* 3D side panel for cargo */
+        .cargo::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 40px;
+            height: 100%;
+            background: linear-gradient(to right, #F57C00 0%, #E65100 100%);
+            transform-origin: left;
+            transform: rotateY(90deg);
+            border-radius: 0 5px 5px 0;
+        }
+
+        /* 3D top panel for cargo */
+        .cargo::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 40px;
+            background: linear-gradient(to bottom, #FFB74D 0%, #FF9800 100%);
+            transform-origin: bottom;
+            transform: rotateX(90deg);
+            border-radius: 5px 5px 0 0;
         }
 
         .cargo:nth-child(3) {
             background: linear-gradient(to bottom, #4CAF50 0%, #388E3C 100%);
         }
 
+        .cargo:nth-child(3)::before {
+            background: linear-gradient(to right, #388E3C 0%, #2E7D32 100%);
+        }
+
+        .cargo:nth-child(3)::after {
+            background: linear-gradient(to bottom, #81C784 0%, #4CAF50 100%);
+        }
+
         .cargo:nth-child(4) {
             background: linear-gradient(to bottom, #2196F3 0%, #1976D2 100%);
+        }
+
+        .cargo:nth-child(4)::before {
+            background: linear-gradient(to right, #1976D2 0%, #1565C0 100%);
+        }
+
+        .cargo:nth-child(4)::after {
+            background: linear-gradient(to bottom, #64B5F6 0%, #2196F3 100%);
         }
 
         /* Wheels */
@@ -307,6 +429,8 @@
             background: radial-gradient(circle, #333 40%, #666 41%, #666 60%, #333 61%);
             border-radius: 50%;
             animation: rotate 0.5s infinite linear;
+            transform-style: preserve-3d;
+            box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
         }
 
         @keyframes rotate {
