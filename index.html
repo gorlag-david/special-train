@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Mobile Train Animation</title>
+    <title>Real 3D Train Animation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -32,6 +33,16 @@
             width: 100%;
             height: 100vh;
             overflow: hidden;
+        }
+
+        /* Three.js canvas */
+        #canvas3d {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
         }
 
         /* Stars for night mode */
@@ -173,18 +184,6 @@
             100% { transform: translateX(-50%); }
         }
 
-        /* Train container - Fixed position (camera locked) with 3D perspective */
-        .train-container {
-            position: absolute;
-            bottom: 26%;
-            left: 20%;
-            filter: none;
-            transition: filter 0.3s ease;
-            z-index: 100;
-            perspective: 1000px;
-            transform-style: preserve-3d;
-        }
-
         /* Speed variations - Applied to background animations */
         body.speed-slow .tracks,
         body.speed-slow .ground,
@@ -202,248 +201,6 @@
         body.speed-normal .ground,
         body.speed-normal .coin {
             animation-duration: 10s;
-        }
-
-        /* Train structure with 3D transforms */
-        .train {
-            display: flex;
-            align-items: flex-end;
-            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
-            transform-style: preserve-3d;
-            transform: rotateY(-25deg) rotateX(5deg);
-        }
-
-        /* Engine with 3D depth */
-        .engine {
-            position: relative;
-            width: 100px;
-            height: 80px;
-            background: linear-gradient(to bottom, #d32f2f 0%, #b71c1c 100%);
-            border-radius: 10px 10px 5px 5px;
-            margin-right: 5px;
-            transform-style: preserve-3d;
-        }
-
-        /* 3D side panel for engine */
-        .engine::before {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 0;
-            width: 40px;
-            height: 100%;
-            background: linear-gradient(to right, #b71c1c 0%, #8b0000 100%);
-            transform-origin: left;
-            transform: rotateY(90deg);
-            border-radius: 0 10px 5px 0;
-        }
-
-        /* 3D top panel for engine */
-        .engine::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 40px;
-            background: linear-gradient(to bottom, #f44336 0%, #d32f2f 100%);
-            transform-origin: bottom;
-            transform: rotateX(90deg);
-            border-radius: 10px 10px 0 0;
-        }
-
-        .cabin {
-            position: absolute;
-            top: -30px;
-            left: 10px;
-            width: 50px;
-            height: 30px;
-            background: linear-gradient(to bottom, #1976D2 0%, #0D47A1 100%);
-            border-radius: 8px 8px 0 0;
-            transform-style: preserve-3d;
-        }
-
-        /* 3D side panel for cabin */
-        .cabin::before {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 0;
-            width: 40px;
-            height: 100%;
-            background: linear-gradient(to right, #0D47A1 0%, #01579B 100%);
-            transform-origin: left;
-            transform: rotateY(90deg);
-            border-radius: 0 8px 0 0;
-        }
-
-        /* 3D top panel for cabin */
-        .cabin::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 40px;
-            background: linear-gradient(to bottom, #42A5F5 0%, #1976D2 100%);
-            transform-origin: bottom;
-            transform: rotateX(90deg);
-            border-radius: 8px 8px 0 0;
-        }
-
-        .window {
-            position: absolute;
-            top: 5px;
-            left: 10px;
-            width: 30px;
-            height: 20px;
-            background: rgba(255, 255, 255, 0.6);
-            border-radius: 3px;
-            border: 2px solid #333;
-        }
-
-        .chimney {
-            position: absolute;
-            top: -50px;
-            right: 15px;
-            width: 15px;
-            height: 20px;
-            background: #333;
-            border-radius: 3px 3px 0 0;
-            transform-style: preserve-3d;
-        }
-
-        /* 3D side for chimney */
-        .chimney::before {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 0;
-            width: 15px;
-            height: 100%;
-            background: #1a1a1a;
-            transform-origin: left;
-            transform: rotateY(90deg);
-            border-radius: 0 3px 0 0;
-        }
-
-        .smoke {
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 20px;
-            height: 20px;
-            background: rgba(200, 200, 200, 0.7);
-            border-radius: 50%;
-            animation: smoke 2s infinite;
-        }
-
-        @keyframes smoke {
-            0% {
-                transform: translateX(-50%) translateY(0) scale(0.5);
-                opacity: 0.7;
-            }
-            100% {
-                transform: translateX(-50%) translateY(-50px) scale(1.5);
-                opacity: 0;
-            }
-        }
-
-        /* Cargo cars with 3D depth */
-        .cargo {
-            position: relative;
-            width: 90px;
-            height: 70px;
-            background: linear-gradient(to bottom, #FF9800 0%, #F57C00 100%);
-            border-radius: 5px;
-            margin-right: 5px;
-            transform-style: preserve-3d;
-        }
-
-        /* 3D side panel for cargo */
-        .cargo::before {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 0;
-            width: 40px;
-            height: 100%;
-            background: linear-gradient(to right, #F57C00 0%, #E65100 100%);
-            transform-origin: left;
-            transform: rotateY(90deg);
-            border-radius: 0 5px 5px 0;
-        }
-
-        /* 3D top panel for cargo */
-        .cargo::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 40px;
-            background: linear-gradient(to bottom, #FFB74D 0%, #FF9800 100%);
-            transform-origin: bottom;
-            transform: rotateX(90deg);
-            border-radius: 5px 5px 0 0;
-        }
-
-        .cargo:nth-child(3) {
-            background: linear-gradient(to bottom, #4CAF50 0%, #388E3C 100%);
-        }
-
-        .cargo:nth-child(3)::before {
-            background: linear-gradient(to right, #388E3C 0%, #2E7D32 100%);
-        }
-
-        .cargo:nth-child(3)::after {
-            background: linear-gradient(to bottom, #81C784 0%, #4CAF50 100%);
-        }
-
-        .cargo:nth-child(4) {
-            background: linear-gradient(to bottom, #2196F3 0%, #1976D2 100%);
-        }
-
-        .cargo:nth-child(4)::before {
-            background: linear-gradient(to right, #1976D2 0%, #1565C0 100%);
-        }
-
-        .cargo:nth-child(4)::after {
-            background: linear-gradient(to bottom, #64B5F6 0%, #2196F3 100%);
-        }
-
-        /* Wheels */
-        .wheels {
-            position: absolute;
-            bottom: -15px;
-            display: flex;
-            justify-content: space-around;
-            width: 100%;
-            padding: 0 10px;
-        }
-
-        .wheel {
-            width: 25px;
-            height: 25px;
-            background: radial-gradient(circle, #333 40%, #666 41%, #666 60%, #333 61%);
-            border-radius: 50%;
-            animation: rotate 0.5s infinite linear;
-            transform-style: preserve-3d;
-            box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.5);
-        }
-
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        .train-container.slow .wheel {
-            animation-duration: 1s;
-        }
-
-        .train-container.fast .wheel {
-            animation-duration: 0.25s;
         }
 
         /* Controls - Moved to top-left */
@@ -673,44 +430,8 @@
             <div class="tracks"></div>
         </div>
 
-        <!-- Train -->
-        <div class="train-container" id="train">
-            <div class="train">
-                <!-- Engine -->
-                <div class="engine">
-                    <div class="cabin">
-                        <div class="window"></div>
-                    </div>
-                    <div class="chimney">
-                        <div class="smoke"></div>
-                    </div>
-                    <div class="wheels">
-                        <div class="wheel"></div>
-                        <div class="wheel"></div>
-                    </div>
-                </div>
-
-                <!-- Cargo cars -->
-                <div class="cargo">
-                    <div class="wheels">
-                        <div class="wheel"></div>
-                        <div class="wheel"></div>
-                    </div>
-                </div>
-                <div class="cargo">
-                    <div class="wheels">
-                        <div class="wheel"></div>
-                        <div class="wheel"></div>
-                    </div>
-                </div>
-                <div class="cargo">
-                    <div class="wheels">
-                        <div class="wheel"></div>
-                        <div class="wheel"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- Three.js 3D Canvas -->
+        <canvas id="canvas3d"></canvas>
     </div>
 
     <!-- Toggle button -->
@@ -759,13 +480,208 @@
         // Game state
         let score = 0;
         let coinSpawnTimer = null;
+        let currentSpeed = 'normal';
+        let currentFilter = 'none';
+
+        // Three.js variables
+        let scene, camera, renderer, trainGroup;
+        let wheels = [];
+        let animationSpeed = 1;
 
         // Initialize scene
         function init() {
             createStars();
             createClouds();
             document.body.classList.add('speed-normal');
+            initThreeJS();
+            animate();
             startCoinSpawning();
+        }
+
+        // Initialize Three.js scene
+        function initThreeJS() {
+            const canvas = document.getElementById('canvas3d');
+
+            // Create scene
+            scene = new THREE.Scene();
+
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(8, 5, 12);
+            camera.lookAt(0, 0, 0);
+
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            // Add lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 10, 5);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+
+            // Create train
+            createTrain();
+
+            // Handle window resize
+            window.addEventListener('resize', onWindowResize, false);
+        }
+
+        // Create the 3D train
+        function createTrain() {
+            trainGroup = new THREE.Group();
+
+            // Create engine body
+            const engineGeometry = new THREE.BoxGeometry(2, 1.5, 2);
+            const engineMaterial = new THREE.MeshPhongMaterial({ color: 0xd32f2f });
+            const engine = new THREE.Mesh(engineGeometry, engineMaterial);
+            engine.position.set(0, 0.75, 0);
+            engine.castShadow = true;
+            trainGroup.add(engine);
+
+            // Create cabin on top of engine
+            const cabinGeometry = new THREE.BoxGeometry(1, 0.8, 1.2);
+            const cabinMaterial = new THREE.MeshPhongMaterial({ color: 0x1976D2 });
+            const cabin = new THREE.Mesh(cabinGeometry, cabinMaterial);
+            cabin.position.set(-0.3, 1.9, 0);
+            cabin.castShadow = true;
+            trainGroup.add(cabin);
+
+            // Create cabin window
+            const windowGeometry = new THREE.BoxGeometry(0.05, 0.5, 0.8);
+            const windowMaterial = new THREE.MeshPhongMaterial({
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.7,
+                emissive: 0x88ccff,
+                emissiveIntensity: 0.3
+            });
+            const window1 = new THREE.Mesh(windowGeometry, windowMaterial);
+            window1.position.set(-0.3, 1.9, 0.61);
+            trainGroup.add(window1);
+
+            // Create chimney
+            const chimneyGeometry = new THREE.CylinderGeometry(0.15, 0.15, 0.6, 8);
+            const chimneyMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
+            const chimney = new THREE.Mesh(chimneyGeometry, chimneyMaterial);
+            chimney.position.set(0.4, 1.8, 0);
+            chimney.castShadow = true;
+            trainGroup.add(chimney);
+
+            // Create engine front (boiler front)
+            const boilerGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.3, 16);
+            const boilerMaterial = new THREE.MeshPhongMaterial({ color: 0xb71c1c });
+            const boiler = new THREE.Mesh(boilerGeometry, boilerMaterial);
+            boiler.rotation.z = Math.PI / 2;
+            boiler.position.set(-1.15, 0.75, 0);
+            boiler.castShadow = true;
+            trainGroup.add(boiler);
+
+            // Create cargo cars
+            const cargoColors = [0xFF9800, 0x4CAF50, 0x2196F3];
+            for (let i = 0; i < 3; i++) {
+                const cargoGeometry = new THREE.BoxGeometry(1.8, 1.3, 1.8);
+                const cargoMaterial = new THREE.MeshPhongMaterial({ color: cargoColors[i] });
+                const cargo = new THREE.Mesh(cargoGeometry, cargoMaterial);
+                cargo.position.set(2.5 + i * 2.5, 0.65, 0);
+                cargo.castShadow = true;
+                trainGroup.add(cargo);
+
+                // Add wheels to cargo
+                createWheels(trainGroup, 2.5 + i * 2.5);
+            }
+
+            // Add wheels to engine
+            createWheels(trainGroup, 0);
+
+            // Position the entire train
+            trainGroup.position.set(0, 0, 0);
+            scene.add(trainGroup);
+        }
+
+        // Create wheels for train parts
+        function createWheels(parent, xPos) {
+            const wheelGeometry = new THREE.CylinderGeometry(0.4, 0.4, 0.3, 16);
+            const wheelMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
+
+            // Left wheels
+            const wheelL1 = new THREE.Mesh(wheelGeometry, wheelMaterial);
+            wheelL1.rotation.z = Math.PI / 2;
+            wheelL1.position.set(xPos - 0.5, 0, -1.1);
+            wheelL1.castShadow = true;
+            parent.add(wheelL1);
+            wheels.push(wheelL1);
+
+            const wheelL2 = new THREE.Mesh(wheelGeometry, wheelMaterial);
+            wheelL2.rotation.z = Math.PI / 2;
+            wheelL2.position.set(xPos + 0.5, 0, -1.1);
+            wheelL2.castShadow = true;
+            parent.add(wheelL2);
+            wheels.push(wheelL2);
+
+            // Right wheels
+            const wheelR1 = new THREE.Mesh(wheelGeometry, wheelMaterial);
+            wheelR1.rotation.z = Math.PI / 2;
+            wheelR1.position.set(xPos - 0.5, 0, 1.1);
+            wheelR1.castShadow = true;
+            parent.add(wheelR1);
+            wheels.push(wheelR1);
+
+            const wheelR2 = new THREE.Mesh(wheelGeometry, wheelMaterial);
+            wheelR2.rotation.z = Math.PI / 2;
+            wheelR2.position.set(xPos + 0.5, 0, 1.1);
+            wheelR2.castShadow = true;
+            parent.add(wheelR2);
+            wheels.push(wheelR2);
+
+            // Add wheel details (spokes)
+            wheels.forEach(wheel => {
+                const spokeGeometry = new THREE.BoxGeometry(0.05, 0.6, 0.05);
+                const spokeMaterial = new THREE.MeshPhongMaterial({ color: 0x666666 });
+
+                for (let i = 0; i < 4; i++) {
+                    const spoke = new THREE.Mesh(spokeGeometry, spokeMaterial);
+                    spoke.rotation.y = (Math.PI / 4) * i;
+                    wheel.add(spoke);
+                }
+            });
+        }
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotate wheels based on speed
+            wheels.forEach(wheel => {
+                wheel.rotation.y += 0.1 * animationSpeed;
+            });
+
+            // Gentle rocking motion for realism
+            if (trainGroup) {
+                trainGroup.position.y = Math.sin(Date.now() * 0.002) * 0.02;
+                trainGroup.rotation.z = Math.sin(Date.now() * 0.001) * 0.01;
+            }
+
+            // Auto-rotate camera slightly
+            camera.position.x = Math.sin(Date.now() * 0.0002) * 10;
+            camera.position.z = Math.cos(Date.now() * 0.0002) * 12 + 2;
+            camera.lookAt(0, 0, 0);
+
+            renderer.render(scene, camera);
+        }
+
+        // Handle window resize
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
         // Create stars for night mode
@@ -802,10 +718,6 @@
                 cloud.style.animationDuration = Math.random() * 10 + 15 + 's';
                 cloud.style.animationDelay = Math.random() * 10 + 's';
 
-                // Create cloud puffs
-                const before = Math.random() * 20 + 40;
-                cloud.style.setProperty('--before-size', before + 'px');
-
                 cloudsContainer.appendChild(cloud);
             }
         }
@@ -814,6 +726,13 @@
         function setSpeed(speed) {
             document.body.classList.remove('speed-slow', 'speed-normal', 'speed-fast');
             document.body.classList.add('speed-' + speed);
+            currentSpeed = speed;
+
+            // Update 3D animation speed
+            if (speed === 'slow') animationSpeed = 0.5;
+            else if (speed === 'fast') animationSpeed = 2;
+            else animationSpeed = 1;
+
             updateActiveButton(event.target, 'speed');
         }
 
@@ -824,13 +743,26 @@
             updateActiveButton(event.target, 'time');
         }
 
-        // Filter control
+        // Filter control (applies to 3D scene)
         function setFilter(filterName) {
-            const train = document.getElementById('train');
-            train.className = train.className.split(' ').filter(c => !c.startsWith('filter-')).join(' ');
+            currentFilter = filterName;
+            const canvas = document.getElementById('canvas3d');
 
-            if (filterName !== 'none') {
-                train.classList.add('filter-' + filterName);
+            // Remove all filter classes
+            canvas.className = '';
+
+            // Apply CSS filters to canvas
+            switch(filterName) {
+                case 'sepia': canvas.style.filter = 'sepia(80%)'; break;
+                case 'grayscale': canvas.style.filter = 'grayscale(100%)'; break;
+                case 'blur': canvas.style.filter = 'blur(2px)'; break;
+                case 'brightness': canvas.style.filter = 'brightness(1.3)'; break;
+                case 'contrast': canvas.style.filter = 'contrast(1.5)'; break;
+                case 'saturate': canvas.style.filter = 'saturate(2)'; break;
+                case 'hue': canvas.style.filter = 'hue-rotate(90deg)'; break;
+                case 'invert': canvas.style.filter = 'invert(100%)'; break;
+                case 'vintage': canvas.style.filter = 'sepia(50%) contrast(1.2) brightness(0.9)'; break;
+                default: canvas.style.filter = 'none';
             }
 
             updateActiveButton(event.target, 'filter');
@@ -843,27 +775,24 @@
             button.classList.add('active');
         }
 
-        // Coin spawning - Spawn coins seldom (every 8-15 seconds)
+        // Coin spawning
         function startCoinSpawning() {
             function spawnCoin() {
                 const coin = document.createElement('div');
                 coin.className = 'coin';
                 coin.style.left = '100vw';
 
-                // Randomize vertical position slightly
                 const randomOffset = Math.random() * 10 - 5;
                 coin.style.bottom = (35 + randomOffset) + '%';
 
                 document.getElementById('scene').appendChild(coin);
 
-                // Check for collision periodically
                 const collisionInterval = setInterval(() => {
                     if (checkCollision(coin)) {
                         collectCoin(coin);
                         clearInterval(collisionInterval);
                     }
 
-                    // Remove coin if it goes off screen
                     const coinRect = coin.getBoundingClientRect();
                     if (coinRect.right < 0) {
                         coin.remove();
@@ -871,26 +800,26 @@
                     }
                 }, 50);
 
-                // Schedule next coin spawn (8-15 seconds - seldom)
                 const nextSpawnDelay = Math.random() * 7000 + 8000;
                 coinSpawnTimer = setTimeout(spawnCoin, nextSpawnDelay);
             }
 
-            // Start spawning coins
             const initialDelay = Math.random() * 5000 + 3000;
             coinSpawnTimer = setTimeout(spawnCoin, initialDelay);
         }
 
-        // Check collision between train and coin
+        // Check collision (using canvas center approximation)
         function checkCollision(coin) {
-            const train = document.getElementById('train');
-            const trainRect = train.getBoundingClientRect();
             const coinRect = coin.getBoundingClientRect();
+            const trainX = window.innerWidth * 0.4; // Approximate train position
+            const trainY = window.innerHeight * 0.6;
+            const trainWidth = 200;
+            const trainHeight = 150;
 
-            return !(coinRect.right < trainRect.left ||
-                     coinRect.left > trainRect.right ||
-                     coinRect.bottom < trainRect.top ||
-                     coinRect.top > trainRect.bottom);
+            return !(coinRect.right < trainX ||
+                     coinRect.left > trainX + trainWidth ||
+                     coinRect.bottom < trainY ||
+                     coinRect.top > trainY + trainHeight);
         }
 
         // Collect coin
@@ -901,7 +830,6 @@
             score++;
             document.getElementById('scoreValue').textContent = score;
 
-            // Remove coin after animation
             setTimeout(() => {
                 coin.remove();
             }, 500);
